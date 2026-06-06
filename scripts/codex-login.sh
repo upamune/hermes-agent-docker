@@ -3,10 +3,10 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-mkdir -p data/hermes/home/.codex
+install -d -m 700 data/codex
 
-if [ ! -f data/hermes/home/.codex/config.toml ]; then
-	cat >data/hermes/home/.codex/config.toml <<'EOF'
+if [ ! -f data/codex/config.toml ]; then
+	cat >data/codex/config.toml <<'EOF'
 cli_auth_credentials_store = "file"
 forced_login_method = "chatgpt"
 EOF
@@ -26,3 +26,4 @@ echo "Do not use --device-auth, and do not paste callback URLs into chat."
 echo
 
 docker exec -i hermes sh -lc 'HOME=/opt/data/home CODEX_HOME=/opt/data/home/.codex codex login'
+scripts/hermes-import-codex-auth.sh

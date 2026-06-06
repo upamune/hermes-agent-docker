@@ -1,0 +1,24 @@
+# Hermes MCP configuration reference:
+# https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp
+
+mcp_servers:
+  github:
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-github"]
+    env:
+      GITHUB_PERSONAL_ACCESS_TOKEN: "***"
+    tools:
+      include: [create_issue, list_issues, search_code]
+      prompts: false
+
+  stripe:
+    url: "https://mcp.stripe.com"
+    headers:
+      Authorization: "Bearer ***"
+    tools:
+      exclude: [delete_customer]
+      resources: false
+
+  legacy:
+    url: "https://mcp.legacy.internal"
+    enabled: false

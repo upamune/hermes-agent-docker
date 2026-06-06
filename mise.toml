@@ -1,4 +1,7 @@
 [tools]
+hadolint = "latest"
+lefthook = "2.1.9"
+pinact = "4.0.0"
 shellcheck = "latest"
 shfmt = "latest"
 
@@ -9,3 +12,15 @@ run = "shfmt -w scripts/*.sh"
 [tasks.lint-shell]
 description = "Lint shell scripts under scripts/"
 run = "shellcheck scripts/*.sh"
+
+[tasks.lint-docker]
+description = "Lint Dockerfiles with hadolint"
+run = "hadolint Dockerfile.*"
+
+[tasks.install-hooks]
+description = "Install lefthook Git hooks"
+run = "lefthook install"
+
+[tasks.update-codex-installer]
+description = "Refresh the vendored Codex CLI installer"
+run = "scripts/update-codex-installer.sh"

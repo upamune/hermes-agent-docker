@@ -1,0 +1,11 @@
+pre-commit:
+  commands:
+    format-shell:
+      run: mise run format-shell
+      stage_fixed: true
+    lint-shell:
+      run: mise run lint-shell
+    lint-docker:
+      run: mise run lint-docker
+    lint-actions:
+      run: mise exec -- pinact run --check --verify-comment

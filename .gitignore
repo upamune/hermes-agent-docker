@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 docker-compose.images.lock.yml
+templates/hermes-config-mcp.yaml
 
 # Local runtime data, persistent state, and credentials
 data/*
@@ -13,6 +14,8 @@ data/*
 
 # Runtime logs and generated state
 logs/
+__pycache__/
+*.py[cod]
 *.log
 *.pid
 *.lock
