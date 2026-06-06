@@ -1,64 +1,63 @@
 # Hermes Agent Docker セットアップ
 
-このディレクトリを Hermes Agent の永続データ置き場として使います。`$HOME/.hermes` は使いません。
+Hermes Agent を Docker 上で動かし、egress（外部通信）を g0efilter で制御するためのセットアップです。永続データはすべてこのリポジトリの `./data/` 以下に置きます（`$HOME/.hermes` は使いません）。
 
-- Hermes データ: `./data/hermes`
-- g0efilter ポリシー: `./data/g0efilter-policy/policy.yaml`
-- g0efilter ログ: `./data/g0efilter-logs/`
-- Hermes 初期 config template: `./templates/hermes-config.yaml`
-- g0efilter 初期 policy template: `./templates/g0efilter-policy.yaml`
+## ディレクトリ構成
 
-runtime に生成される mount 先はすべて `./data/` 以下に集約しています。`data/` は `.gitignore` と `.dockerignore` で除外しています。
+| パス | 内容 |
+| --- | --- |
+| `data/hermes/` | Hermes の state（`./data/` は `.gitignore` / `.dockerignore` で除外） |
+| `data/g0efilter-policy/policy.yaml` | g0efilter の egress allowlist |
+| `data/g0efilter-logs/` | g0efilter の audit log |
+| `templates/hermes-config.yaml` | Hermes の初期 config（model / tools などの初期設定） |
+| `templates/g0efilter-policy.yaml` | g0efilter の初期 policy |
 
-## 起動
+初回（fresh）起動時に、`templates/` の内容が `data/` 配下にコピーされます。
 
-clone 後に最初にやること:
+- `templates/hermes-config.yaml` → `data/hermes/config.yaml`
+- `templates/g0efilter-policy.yaml` → `data/g0efilter-policy/policy.yaml`
+
+## クイックスタート
+
+clone 後にまず実行します。
 
 ```sh
 scripts/hermes-up.sh
 scripts/codex-ensure-login.sh
 ```
 
-`scripts/hermes-up.sh` は Docker image を build して Compose services を起動します。fresh 環境では `templates/` から `data/` に初期設定をコピーします。
+- `scripts/hermes-up.sh` — Docker image を build し、Compose services を起動します。fresh 環境では `templates/` から `data/` に初期設定をコピーします。
+- `scripts/codex-ensure-login.sh` — Codex の login status を確認し、未ログインなら login flow を開始します。
 
-`scripts/codex-ensure-login.sh` は Codex の login status を確認し、未ログインなら browser callback login を開始します。
-
-fresh 起動時には template から runtime data が作られます。
-
-- `templates/hermes-config.yaml` -> `data/hermes/config.yaml`
-- `templates/g0efilter-policy.yaml` -> `data/g0efilter-policy/policy.yaml`
-
-template には model / tools / egress allowlist などの初期設定を入れます。
-
-`scripts/hermes-up.sh` は Codex の login status も確認します。未ログインなら、次に実行するコマンドとして `scripts/codex-login.sh` を表示します。
-
-Hermes setup wizard を強制的に実行したい場合:
+Hermes の setup wizard を制御するオプションもあります。
 
 ```sh
-scripts/hermes-up.sh --setup
-```
-
-fresh 検証などで setup wizard を起動したくない場合:
-
-```sh
-scripts/hermes-up.sh --no-setup
+scripts/hermes-up.sh --setup     # setup wizard を強制実行する
+scripts/hermes-up.sh --no-setup  # fresh 検証などで setup wizard を起動しない
 ```
 
 ## アクセス先
 
-Hermes dashboard:
+| Dashboard | URL |
+| --- | --- |
+| Hermes | `http://127.0.0.1:19119` |
+| g0efilter | `http://127.0.0.1:18081` |
 
-```text
-http://127.0.0.1:19119
+Docker の port publish は `127.0.0.1` 限定です。同じ macOS からのみアクセスできます。
+
+### Portless で開く
+
+port 番号の代わりに安定した `.localhost` 名で開けます。
+
+```sh
+docker compose up -d
+
+# g0efilter dashboard → http://hermes-egress.localhost:1355
+portless hermes-egress sh -c 'npx --yes http-proxy-cli --port "$PORT" 127.0.0.1:18081'
+
+# Hermes dashboard → http://hermes-dashboard.localhost:1355
+portless hermes-dashboard sh -c 'npx --yes http-proxy-cli --port "$PORT" 127.0.0.1:19119'
 ```
-
-g0efilter dashboard:
-
-```text
-http://127.0.0.1:18081
-```
-
-どちらも Docker の port publish は `127.0.0.1` 限定です。同じ macOS からだけアクセスできます。
 
 ## Egress 制御
 
@@ -68,17 +67,9 @@ Hermes は g0efilter の network namespace を共有しています。
 network_mode: "service:g0efilter"
 ```
 
-そのため、アプリケーション側の proxy 設定に依存せず、Hermes からの egress は g0efilter に捕まります。g0efilter は HTTP Host と TLS SNI を見て制御します。TLS の復号はしません。
+このため、アプリ側の proxy 設定に依存せず、Hermes からの egress はすべて g0efilter を通ります。g0efilter は HTTP Host と TLS SNI を見て制御し、TLS の復号はしません。default deny で運用でき、ブロックした通信は dashboard に表示されます。
 
-g0efilter は default deny で使えます。ブロックされた通信は dashboard に表示されます。
-
-allowlist はホスト側のこのファイルで管理します。
-
-```text
-data/g0efilter-policy/policy.yaml
-```
-
-例:
+allowlist はホスト側の `data/g0efilter-policy/policy.yaml` で管理します。
 
 ```yaml
 allowlist:
@@ -105,62 +96,31 @@ allowlist:
   domains: []
 ```
 
-`0.0.0.0/0` を入れる場合は、`10.0.0.0/8` などの内側の CIDR と同時に入れないでください。nftables が重複 interval として弾きます。
+> `0.0.0.0/0` を入れるときは、`10.0.0.0/8` などの内側の CIDR と同時に入れないでください。nftables が重複 interval として弾きます。
 
-remote unblock は無効化しています。container から `data/g0efilter-policy` を書き換えられないように、policy mount は read-only です。許可追加は必ずホスト側で `policy.yaml` を編集します。
+policy mount は read-only で、remote unblock も無効化しています。container 側から `policy.yaml` を書き換えることはできません。許可を追加するときは必ずホスト側で編集します。
 
-## Portless
+## Codex CLI ログイン
 
-portless を使うと、localhost の port 番号ではなく安定した `.localhost` 名で開けます。
-
-g0efilter dashboard:
-
-```sh
-docker compose up -d
-portless hermes-egress sh -c 'npx --yes http-proxy-cli --port "$PORT" 127.0.0.1:18081'
-```
-
-開く URL:
-
-```text
-http://hermes-egress.localhost:1355
-```
-
-Hermes dashboard:
-
-```sh
-portless hermes-dashboard sh -c 'npx --yes http-proxy-cli --port "$PORT" 127.0.0.1:19119'
-```
-
-開く URL:
-
-```text
-http://hermes-dashboard.localhost:1355
-```
-
-## Hermes Dashboard
-
-Hermes dashboard 自体は、shared container network namespace 内の `127.0.0.1:9118` にだけ bind します。
-
-`hermes-dashboard-proxy` が同じ namespace 内で `:9119` を listen し、`127.0.0.1:9118` に reverse proxy します。Docker はそれを macOS の `127.0.0.1:19119` にだけ publish します。
-
-この構成では Hermes dashboard に Basic Auth はかけていません。外部公開はしていない前提です。
-
-## Codex CLI
-
-この Compose は `hermes-agent-codex:latest` という派生イメージを build します。中で公式 installer を使って Codex CLI を入れています。
+Compose は `hermes-agent-codex:latest` という派生 image を build し、その中で公式 installer を使って Codex CLI を入れています（`Dockerfile.hermes-codex`）。
 
 ```dockerfile
 RUN curl -fsSL https://chatgpt.com/codex/install.sh | sh
 ```
 
-Codex の ChatGPT login は localhost callback port `1455` を使います。この Compose では macOS localhost に publish しています。
+### 通常のログイン
 
-```text
-127.0.0.1:1455 -> container :1455
+```sh
+scripts/codex-login.sh
 ```
 
-Codex CLI は container 内の `127.0.0.1:1455` に callback server を bind します。Docker の port publish は container の外向き interface に入るため、そのままだと macOS のブラウザから届きません。このため `codex-login-proxy` が container 外向き interface `:1455` から `127.0.0.1:1455` へ転送します。
+OpenAI の auth URL が terminal に表示され、待機状態になります。表示された URL を macOS のブラウザで開いてください。`--device-auth` は使いません。ChatGPT Enterprise で device code auth が拒否されている環境でも、通常の callback flow を使えます。
+
+`codex-login-proxy` は login 中だけ使います。`scripts/codex-login.sh` が終了・中断されると、この container だけ自動で停止します。手動で止める場合:
+
+```sh
+docker compose stop codex-login-proxy
+```
 
 ブラウザで `ERR_EMPTY_RESPONSE` が出る場合は、古い login process と proxy を作り直してから再実行します。
 
@@ -170,126 +130,83 @@ docker compose up -d codex-login-proxy
 scripts/codex-login.sh
 ```
 
-Codex login:
+### その他の操作
 
 ```sh
-scripts/codex-login.sh
+scripts/codex-status.sh        # version と login status を確認
+scripts/codex-ensure-login.sh  # 未ログインならそのまま login flow を開始
 ```
 
-このコマンドは OpenAI auth URL を terminal に表示して待機します。表示された URL を macOS のブラウザで開いてください。`--device-auth` は使いません。ChatGPT Enterprise で device code auth が拒否されている場合でも、通常の callback flow を使えます。
-
-`codex-login-proxy` は login 中だけ使います。`scripts/codex-login.sh` が終了または中断されると、この container だけ自動で停止します。手動で止める場合:
-
-```sh
-docker compose stop codex-login-proxy
-```
-
-Codex status:
-
-```sh
-scripts/codex-status.sh
-```
-
-未ログインならそのまま login flow を開始する場合:
-
-```sh
-scripts/codex-ensure-login.sh
-```
-
-macOS 側でログイン済みの Codex auth cache を Hermes にコピーする場合:
+macOS 側でログイン済みの auth cache を Hermes にコピーする場合:
 
 ```sh
 codex login
 scripts/codex-copy-host-auth.sh
 ```
 
-Codex の認証キャッシュはここに保存されます。
+Codex の認証キャッシュの保存先:
 
-```text
-data/hermes/home/.codex/auth.json
-```
+- ホスト: `data/hermes/home/.codex/auth.json`
+- container: `/opt/data/home/.codex/auth.json`
 
-container 側では以下として見えます。
-
-```text
-/opt/data/home/.codex/auth.json
-```
-
-`.dockerignore` で `data/hermes/` を build context から除外しています。これは `auth.json` を Docker image build に混ぜないためです。実行時は bind mount されるので、Hermes container からは読めます。
+`.dockerignore` で `data/hermes/` を build context から除外しているため、`auth.json` が Docker image build に混ざることはありません。実行時は bind mount されるので、Hermes container からは読めます。
 
 ## スクリプト一覧
 
-```text
-scripts/hermes-up.sh
-```
+| スクリプト | 内容 |
+| --- | --- |
+| `scripts/hermes-up.sh` | Hermes image を build して Compose services を起動。`data/hermes/config.yaml` が無ければ setup wizard を自動実行（通常は `templates/` を先にコピーするため template ベースで起動） |
+| `scripts/codex-login.sh` | Hermes container 内で Codex の ChatGPT callback login を開始 |
+| `scripts/codex-status.sh` | container 内の Codex CLI version と login status を確認 |
+| `scripts/codex-ensure-login.sh` | login status を確認し、未ログインなら `codex-login.sh` を起動 |
+| `scripts/codex-copy-host-auth.sh` | macOS の `~/.codex/auth.json` を `data/hermes/home/.codex/auth.json` にコピー |
 
-Hermes image を build して、Compose services を起動します。
-`data/hermes/config.yaml` が無ければ Hermes setup wizard も自動で実行します。
-ただし `templates/hermes-config.yaml` がある場合は先にそれをコピーするため、通常は template ベースで起動します。
+## ネットワーク構成
 
-```text
-scripts/codex-login.sh
-```
+### Hermes dashboard の proxy
 
-Hermes container 内で Codex の ChatGPT callback login を開始します。
+Hermes dashboard 自体は、共有 network namespace 内の `127.0.0.1:9118` にだけ bind します。`hermes-dashboard-proxy` が同じ namespace 内で `:9119` を listen し、`127.0.0.1:9118` に reverse proxy します。Docker はそれを macOS の `127.0.0.1:19119` にだけ publish します。
 
-```text
-scripts/codex-status.sh
-```
+外部公開しない前提のため、Hermes dashboard に Basic Auth はかけていません。
 
-Hermes container 内の Codex CLI version と login status を確認します。
+### Codex login callback の proxy
 
-```text
-scripts/codex-ensure-login.sh
-```
-
-Codex の login status を確認し、未ログインなら `scripts/codex-login.sh` を起動します。
+Codex の ChatGPT login は localhost callback port `1455` を使い、Codex CLI は container 内の `127.0.0.1:1455` に callback server を bind します。Docker の port publish は container の外向き interface に入るため、そのままでは macOS のブラウザから届きません。このため `codex-login-proxy` が container 外向き interface `:1455` から `127.0.0.1:1455` へ転送します。
 
 ```text
-scripts/codex-copy-host-auth.sh
+127.0.0.1:1455 (macOS) -> container :1455 -> 127.0.0.1:1455 (callback server)
 ```
 
-macOS の `~/.codex/auth.json` を `data/hermes/home/.codex/auth.json` にコピーします。
+### 書き込み可能な mount
 
-## 書き込み可能な mount
+g0efilter 系の container は read-only root filesystem で動かしています。container から書けるホスト側 directory は最小限です。
 
-g0efilter 系 container は read-only root filesystem で動かしています。
+| ホスト | container | アクセス | 内容 |
+| --- | --- | --- | --- |
+| `./data/hermes` | `/opt/data` | rw | Hermes state |
+| `./data/g0efilter-logs` | `/app/logs` | rw | g0efilter audit log |
+| `./data/g0efilter-policy` | `/app/policy` | ro | g0efilter policy |
 
-container から書ける host directory は最小限です。
+## Docker image の pinning
 
-- `./data/hermes` -> `/opt/data`: Hermes state
-- `./data/g0efilter-logs` -> `/app/logs`: g0efilter audit logs
+Docker image は Renovate で digest pinning する前提です（`renovate.json`）。
 
-`./data/g0efilter-policy` -> `/app/policy` は read-only です。
-
-## Docker Image Pinning
-
-Docker image は Renovate で digest pinning する前提です。
-
-```text
-renovate.json
-```
-
-Renovate は以下を対象にします。
+Renovate の対象:
 
 - `Dockerfile.hermes-codex` の `FROM nousresearch/hermes-agent:...`
 - `docker-compose.yml` の外部 image
 
-`hermes-agent-codex:latest` はローカル build image なので Renovate 対象外です。
-
-Renovate は新しい release/digest が出ても 7 日間は PR を作らない設定です。
+ローカル build image の `hermes-agent-codex:latest` は対象外です。新しい release/digest が出ても 7 日間は PR を作らない設定です。
 
 ```json
 "minimumReleaseAge": "7 days",
 "internalChecksFilter": "strict"
 ```
 
-ローカルで最新 tag を明示的に取りに行く場合:
+通常は Renovate の PR を取り込んでから `scripts/hermes-up.sh` を実行します。ローカルで最新 tag を明示的に取りに行く場合:
 
 ```sh
 docker compose pull
 docker compose build --pull hermes
 scripts/hermes-up.sh
 ```
-
-digest pin 済みの運用では、通常は Renovate の PR を取り込んでから `scripts/hermes-up.sh` を実行します。
