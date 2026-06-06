@@ -1,0 +1,105 @@
+services:
+  g0efilter:
+    image: docker.io/g0lab/g0efilter:latest@sha256:944672d46e53a499287e7ec966c3178f7298a373e2069dcaf25e3b12769a5758
+    container_name: hermes-g0efilter
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges
+    volumes:
+      - ./data/g0efilter-policy:/app/policy:ro
+      - ./data/g0efilter-logs:/app/logs:rw
+    environment:
+      HOSTNAME: hermes
+      FILTER_MODE: https
+      POLICY_PATH: /app/policy/policy.yaml
+      DASHBOARD_HOST: http://127.0.0.1:8081
+      DASHBOARD_API_KEY: ${G0EFILTER_API_KEY:-change-me}
+      ENABLE_REMOTE_UNBLOCK: "false"
+      LOG_FILE: /app/logs/g0efilter.log
+    ports:
+      - "127.0.0.1:${G0EFILTER_DASHBOARD_PORT:-18081}:8081"
+      - "127.0.0.1:${HERMES_API_PORT:-8642}:8642"
+      - "127.0.0.1:${HERMES_DASHBOARD_PORT:-19119}:9119"
+      - "127.0.0.1:${CODEX_LOGIN_CALLBACK_PORT:-1455}:1455"
+
+  g0efilter-dashboard:
+    image: docker.io/g0lab/g0efilter-dashboard:latest@sha256:297e9d79abb35344d2d782e857218db1cd679040461b39e4cc16f952d1833803
+    container_name: hermes-g0efilter-dashboard
+    restart: unless-stopped
+    network_mode: "service:g0efilter"
+    read_only: true
+    security_opt:
+      - no-new-privileges
+    environment:
+      PORT: :8081
+      API_KEY: ${G0EFILTER_API_KEY:-change-me}
+      READ_LIMIT: "5000"
+      BUFFER_SIZE: "5000"
+      WRITE_TIMEOUT: "0"
+    depends_on:
+      - g0efilter
+
+  hermes:
+    build:
+      context: .
+      dockerfile: Dockerfile.hermes-codex
+    image: hermes-agent-codex:latest
+    container_name: hermes
+    restart: unless-stopped
+    network_mode: "service:g0efilter"
+    command: gateway run
+    shm_size: 1g
+    volumes:
+      - ./data/hermes:/opt/data:rw
+    environment:
+      HERMES_DASHBOARD: "1"
+      HERMES_DASHBOARD_HOST: "127.0.0.1"
+      HERMES_DASHBOARD_PORT: "9118"
+      CODEX_HOME: "/opt/data/home/.codex"
+    depends_on:
+      - g0efilter
+      - g0efilter-dashboard
+
+  hermes-dashboard-proxy:
+    image: caddy:2-alpine@sha256:77c07d5ebfa5be9fd6c820d2094ae662c9e7eeb9bf98346b7f639900263ee2a2
+    container_name: hermes-dashboard-proxy
+    restart: unless-stopped
+    network_mode: "service:g0efilter"
+    read_only: true
+    tmpfs:
+      - /data
+      - /config
+    security_opt:
+      - no-new-privileges
+    command:
+      - caddy
+      - reverse-proxy
+      - --from
+      - :9119
+      - --to
+      - 127.0.0.1:9118
+    depends_on:
+      - hermes
+
+  codex-login-proxy:
+    image: alpine/socat:latest@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e
+    container_name: hermes-codex-login-proxy
+    restart: unless-stopped
+    network_mode: "service:g0efilter"
+    read_only: true
+    security_opt:
+      - no-new-privileges
+    entrypoint: []
+    command:
+      - sh
+      - -lc
+      - |
+        ip="$(hostname -i | awk '{print $1}')"
+        exec socat "TCP-LISTEN:1455,bind=$${ip},fork,reuseaddr" TCP:127.0.0.1:1455
+    depends_on:
+      - hermes

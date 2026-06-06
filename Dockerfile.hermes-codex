@@ -1,0 +1,8 @@
+FROM nousresearch/hermes-agent:latest@sha256:46570f664fc62898acac9ca758fc8d4aa98e30964345163b875ed6600e3054b7
+
+USER root
+
+RUN curl -fsSL https://chatgpt.com/codex/install.sh | sh \
+    && cp /root/.codex/packages/standalone/current/bin/codex /usr/local/bin/codex \
+    && chmod 0755 /usr/local/bin/codex \
+    && /usr/local/bin/codex --version

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:pinDigests"
+  ],
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
+  "enabledManagers": [
+    "dockerfile",
+    "docker-compose"
+  ],
+  "packageRules": [
+    {
+      "description": "Do not try to update the locally built Hermes image.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["hermes-agent-codex"],
+      "enabled": false
+    }
+  ]
+}

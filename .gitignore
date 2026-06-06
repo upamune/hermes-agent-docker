@@ -1,0 +1,42 @@
+# Local environment
+.env
+.env.*
+!.env.example
+docker-compose.images.lock.yml
+
+# Local runtime data, persistent state, and credentials
+data/*
+!data/.gitkeep
+**/.codex/auth.json
+**/auth.json
+**/auth.lock
+
+# Runtime logs and generated state
+logs/
+*.log
+*.pid
+*.lock
+*.db
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db-shm
+*.db-wal
+
+# Local backups and scratch data
+backups/
+tmp/
+temp/
+.cache/
+
+# macOS / editor noise
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Node / package manager caches
+node_modules/
+.npm/
+.pnpm-store/

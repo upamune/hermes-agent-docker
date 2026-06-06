@@ -1,0 +1,4 @@
+.env
+data/
+mitmproxy-data/
+.git/
