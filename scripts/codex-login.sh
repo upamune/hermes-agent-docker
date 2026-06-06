@@ -26,3 +26,4 @@ echo "Do not use --device-auth, and do not paste callback URLs into chat."
 echo
 
 docker exec -i hermes sh -lc 'HOME=/opt/data/home CODEX_HOME=/opt/data/home/.codex codex login'
+scripts/hermes-import-codex-auth.sh

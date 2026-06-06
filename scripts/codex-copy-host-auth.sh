@@ -20,3 +20,4 @@ EOF
 fi
 
 echo "copied macOS Codex auth cache into data/codex/auth.json"
+scripts/hermes-import-codex-auth.sh

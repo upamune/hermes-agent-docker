@@ -143,6 +143,7 @@ scripts/codex-login.sh
 ```sh
 scripts/codex-status.sh        # version と login status を確認
 scripts/codex-ensure-login.sh  # 未ログインならそのまま login flow を開始
+scripts/hermes-import-codex-auth.sh  # Codex CLI auth cache を Hermes auth store に同期
 ```
 
 macOS 側でログイン済みの auth cache を Hermes にコピーする場合:
@@ -157,6 +158,8 @@ Codex の認証キャッシュの保存先:
 - ホスト: `data/codex/auth.json`
 - container: `/opt/data/home/.codex/auth.json`
 
+Hermes の `openai-codex` provider は Codex CLI の `auth.json` を直接は読みません。`scripts/hermes-up.sh` は `data/codex/auth.json` が存在する場合に自動で `scripts/hermes-import-codex-auth.sh` を実行し、Codex CLI の token を Hermes の auth store に同期します。`scripts/codex-login.sh` と `scripts/codex-copy-host-auth.sh` も最後に同じ同期を実行します。手動で再同期する場合も同じスクリプトを実行してください。
+
 `data/codex/` は `data/hermes/` とは別の bind mount として `/opt/data/home/.codex` に重ねています。Hermes の通常 state と Codex 認証キャッシュをホスト側で分離し、directory permission は scripts 側で `install -d -m 700` に寄せます。
 
 `.dockerignore` で `data/` を build context から除外しているため、`auth.json` が Docker image build に混ざることはありません。実行時は bind mount されるので、Hermes container からは読めます。
@@ -170,6 +173,7 @@ Codex の認証キャッシュの保存先:
 | `scripts/codex-status.sh` | container 内の Codex CLI version と login status を確認 |
 | `scripts/codex-ensure-login.sh` | login status を確認し、未ログインなら `codex-login.sh` を起動 |
 | `scripts/codex-copy-host-auth.sh` | macOS の `~/.codex/auth.json` を `data/codex/auth.json` にコピー |
+| `scripts/hermes-import-codex-auth.sh` | `data/codex/auth.json` を Hermes の `openai-codex` auth store に同期 |
 
 ## 開発用コマンド
 

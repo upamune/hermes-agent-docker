@@ -56,6 +56,9 @@ fi
 docker compose build hermes
 docker compose up -d
 docker compose stop codex-login-proxy >/dev/null 2>&1 || true
+if [ -f data/codex/auth.json ]; then
+	scripts/hermes-import-codex-auth.sh
+fi
 docker compose ps
 
 echo
