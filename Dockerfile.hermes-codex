@@ -4,8 +4,9 @@ FROM nousresearch/hermes-agent:latest@sha256:46570f664fc62898acac9ca758fc8d4aa98
 # hadolint ignore=DL3002
 USER root
 
-RUN curl -fsSL https://chatgpt.com/codex/install.sh -o /tmp/codex-install.sh \
-    && sh /tmp/codex-install.sh \
+COPY vendor/codex/install.sh /tmp/codex-install.sh
+
+RUN sh /tmp/codex-install.sh \
     && rm -f /tmp/codex-install.sh \
     && cp /root/.codex/packages/standalone/current/bin/codex /usr/local/bin/codex \
     && chmod 0755 /usr/local/bin/codex \

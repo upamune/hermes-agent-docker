@@ -106,7 +106,14 @@ policy mount は read-only で、remote unblock も無効化しています。co
 Compose は `hermes-agent-codex:latest` という派生 image を build し、その中で公式 installer を使って Codex CLI を入れています（`Dockerfile.hermes-codex`）。
 
 ```dockerfile
-RUN curl -fsSL https://chatgpt.com/codex/install.sh | sh
+COPY vendor/codex/install.sh /tmp/codex-install.sh
+RUN sh /tmp/codex-install.sh
+```
+
+Docker build 時に installer をネットワークから取得しないよう、`vendor/codex/install.sh` をリポジトリに固定しています。installer を更新する場合:
+
+```sh
+mise run update-codex-installer
 ```
 
 ### 通常のログイン

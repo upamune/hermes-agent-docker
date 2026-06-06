@@ -20,3 +20,7 @@ run = "hadolint Dockerfile.*"
 [tasks.install-hooks]
 description = "Install lefthook Git hooks"
 run = "lefthook install"
+
+[tasks.update-codex-installer]
+description = "Refresh the vendored Codex CLI installer"
+run = "scripts/update-codex-installer.sh"

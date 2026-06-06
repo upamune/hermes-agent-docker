@@ -59,6 +59,11 @@ mise run install-hooks
 ```
 Installs lefthook pre-commit hooks for local contributors.
 
+```sh
+mise run update-codex-installer
+```
+Refreshes the vendored Codex CLI installer at `vendor/codex/install.sh`.
+
 ## Coding Style & Naming Conventions
 
 Use POSIX-compatible `sh` for scripts unless a stronger shell is required. Keep scripts small, explicit, and idempotent. Prefer lowercase kebab-case filenames, for example `codex-login.sh`. Use two-space indentation for YAML. Keep template files free of machine-specific paths and secrets.
