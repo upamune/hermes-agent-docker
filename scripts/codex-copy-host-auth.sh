@@ -8,15 +8,16 @@ if [ ! -f "$HOME/.codex/auth.json" ]; then
 	exit 1
 fi
 
-mkdir -p data/hermes/home/.codex
-cp "$HOME/.codex/auth.json" data/hermes/home/.codex/auth.json
-chmod 600 data/hermes/home/.codex/auth.json
+mkdir -p data/codex
+chmod 700 data/codex 2>/dev/null || true
+cp "$HOME/.codex/auth.json" data/codex/auth.json
+chmod 600 data/codex/auth.json
 
-if [ ! -f data/hermes/home/.codex/config.toml ]; then
-	cat >data/hermes/home/.codex/config.toml <<'EOF'
+if [ ! -f data/codex/config.toml ]; then
+	cat >data/codex/config.toml <<'EOF'
 cli_auth_credentials_store = "file"
 forced_login_method = "chatgpt"
 EOF
 fi
 
-echo "copied macOS Codex auth cache into data/hermes/home/.codex/auth.json"
+echo "copied macOS Codex auth cache into data/codex/auth.json"

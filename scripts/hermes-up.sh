@@ -16,7 +16,8 @@ elif [ "${1:-}" != "" ]; then
 	exit 2
 fi
 
-mkdir -p data/hermes/home/.codex data/g0efilter-logs data/g0efilter-policy
+mkdir -p data/hermes/home data/codex data/g0efilter-logs data/g0efilter-policy
+chmod 700 data/codex 2>/dev/null || true
 
 if [ ! -f data/hermes/config.yaml ] && [ -f templates/hermes-config.yaml ]; then
 	cp templates/hermes-config.yaml data/hermes/config.yaml

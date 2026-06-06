@@ -3,10 +3,11 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-mkdir -p data/hermes/home/.codex
+mkdir -p data/codex
+chmod 700 data/codex 2>/dev/null || true
 
-if [ ! -f data/hermes/home/.codex/config.toml ]; then
-	cat >data/hermes/home/.codex/config.toml <<'EOF'
+if [ ! -f data/codex/config.toml ]; then
+	cat >data/codex/config.toml <<'EOF'
 cli_auth_credentials_store = "file"
 forced_login_method = "chatgpt"
 EOF
