@@ -1,4 +1,5 @@
 [tools]
+hadolint = "latest"
 shellcheck = "latest"
 shfmt = "latest"
 
@@ -9,3 +10,7 @@ run = "shfmt -w scripts/*.sh"
 [tasks.lint-shell]
 description = "Lint shell scripts under scripts/"
 run = "shellcheck scripts/*.sh"
+
+[tasks.lint-docker]
+description = "Lint Dockerfiles with hadolint"
+run = "hadolint Dockerfile.*"
