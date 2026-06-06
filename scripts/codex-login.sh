@@ -3,8 +3,7 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-mkdir -p data/codex
-chmod 700 data/codex 2>/dev/null || true
+install -d -m 700 data/codex
 
 if [ ! -f data/codex/config.toml ]; then
 	cat >data/codex/config.toml <<'EOF'

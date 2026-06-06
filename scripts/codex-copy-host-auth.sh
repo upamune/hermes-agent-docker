@@ -8,8 +8,7 @@ if [ ! -f "$HOME/.codex/auth.json" ]; then
 	exit 1
 fi
 
-mkdir -p data/codex
-chmod 700 data/codex 2>/dev/null || true
+install -d -m 700 data/codex
 cp "$HOME/.codex/auth.json" data/codex/auth.json
 chmod 600 data/codex/auth.json
 

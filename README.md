@@ -150,7 +150,7 @@ Codex の認証キャッシュの保存先:
 - ホスト: `data/codex/auth.json`
 - container: `/opt/data/home/.codex/auth.json`
 
-`data/codex/` は `data/hermes/` とは別の bind mount として `/opt/data/home/.codex` に重ねています。Hermes の通常 state と Codex 認証キャッシュをホスト側で分離し、directory permission は scripts 側で `700` に寄せます。
+`data/codex/` は `data/hermes/` とは別の bind mount として `/opt/data/home/.codex` に重ねています。Hermes の通常 state と Codex 認証キャッシュをホスト側で分離し、directory permission は scripts 側で `install -d -m 700` に寄せます。
 
 `.dockerignore` で `data/` を build context から除外しているため、`auth.json` が Docker image build に混ざることはありません。実行時は bind mount されるので、Hermes container からは読めます。
 
