@@ -20,8 +20,13 @@ mkdir -p data/hermes/home data/g0efilter-logs data/g0efilter-policy
 install -d -m 700 data/codex
 
 if [ ! -f data/hermes/config.yaml ] && [ -f templates/hermes-config.yaml ]; then
-	cp templates/hermes-config.yaml data/hermes/config.yaml
-	echo "created data/hermes/config.yaml from templates/hermes-config.yaml"
+	if [ -f templates/hermes-config-mcp.yaml ]; then
+		python3 scripts/render-hermes-config.py templates/hermes-config.yaml data/hermes/config.yaml templates/hermes-config-mcp.yaml
+		echo "created data/hermes/config.yaml from templates/hermes-config.yaml + templates/hermes-config-mcp.yaml"
+	else
+		python3 scripts/render-hermes-config.py templates/hermes-config.yaml data/hermes/config.yaml
+		echo "created data/hermes/config.yaml from templates/hermes-config.yaml"
+	fi
 fi
 
 if [ "$skip_setup" = false ] && [ "$force_setup" = false ] && [ ! -f data/hermes/config.yaml ]; then
