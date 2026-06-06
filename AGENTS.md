@@ -40,9 +40,24 @@ mise run lint-shell
 Runs ShellCheck on operational scripts.
 
 ```sh
+mise run lint-docker
+```
+Runs hadolint on `Dockerfile.*`.
+
+```sh
+mise exec -- pinact run --check --verify-comment
+```
+Verifies GitHub Actions are pinned to commit SHAs and version comments match.
+
+```sh
 mise run format-shell
 ```
 Formats shell scripts with shfmt.
+
+```sh
+mise run install-hooks
+```
+Installs lefthook pre-commit hooks for local contributors.
 
 ## Coding Style & Naming Conventions
 
@@ -55,6 +70,8 @@ Before submitting changes, run:
 ```sh
 docker compose config
 mise run lint-shell
+mise run lint-docker
+mise exec -- pinact run --check --verify-comment
 ```
 
 For behavior changes, test a fresh runtime by removing or moving `data/`, then running `scripts/hermes-up.sh --no-setup`. Verify both dashboards respond on `127.0.0.1:19119` and `127.0.0.1:18081`.

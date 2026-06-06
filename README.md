@@ -172,6 +172,14 @@ shell script の lint / format は mise で管理しています。
 mise install
 mise run format-shell
 mise run lint-shell
+mise run lint-docker
+mise exec -- pinact run --check --verify-comment
+```
+
+pre-commit hook を有効化する場合:
+
+```sh
+mise run install-hooks
 ```
 
 ## ネットワーク構成
