@@ -13,6 +13,8 @@ data/*
 
 # Runtime logs and generated state
 logs/
+__pycache__/
+*.py[cod]
 *.log
 *.pid
 *.lock

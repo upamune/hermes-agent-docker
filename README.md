@@ -173,7 +173,7 @@ Hermes の `openai-codex` provider は Codex CLI の `auth.json` を直接は読
 | `scripts/codex-status.sh` | container 内の Codex CLI version と login status を確認 |
 | `scripts/codex-ensure-login.sh` | login status を確認し、未ログインなら `codex-login.sh` を起動 |
 | `scripts/codex-copy-host-auth.sh` | macOS の `~/.codex/auth.json` を `data/codex/auth.json` にコピー |
-| `scripts/hermes-import-codex-auth.sh` | `data/codex/auth.json` を Hermes の `openai-codex` auth store に同期 |
+| `scripts/hermes-import-codex-auth.sh` | `scripts/hermes-import-codex-auth.py` を container にコピーして、`data/codex/auth.json` を Hermes の `openai-codex` auth store に同期 |
 
 ## 開発用コマンド
 
