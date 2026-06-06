@@ -161,6 +161,16 @@ Codex の認証キャッシュの保存先:
 | `scripts/codex-ensure-login.sh` | login status を確認し、未ログインなら `codex-login.sh` を起動 |
 | `scripts/codex-copy-host-auth.sh` | macOS の `~/.codex/auth.json` を `data/hermes/home/.codex/auth.json` にコピー |
 
+## 開発用コマンド
+
+shell script の lint / format は mise で管理しています。
+
+```sh
+mise install
+mise run format-shell
+mise run lint-shell
+```
+
 ## ネットワーク構成
 
 ### Hermes dashboard の proxy

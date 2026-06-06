@@ -1,0 +1,11 @@
+[tools]
+shellcheck = "latest"
+shfmt = "latest"
+
+[tasks.format-shell]
+description = "Format shell scripts under scripts/"
+run = "shfmt -w scripts/*.sh"
+
+[tasks.lint-shell]
+description = "Lint shell scripts under scripts/"
+run = "shellcheck scripts/*.sh"

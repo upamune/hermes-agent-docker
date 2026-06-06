@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 mkdir -p data/hermes/home/.codex
 
 if [ ! -f data/hermes/home/.codex/config.toml ]; then
-  cat > data/hermes/home/.codex/config.toml <<'EOF'
+	cat >data/hermes/home/.codex/config.toml <<'EOF'
 cli_auth_credentials_store = "file"
 forced_login_method = "chatgpt"
 EOF
@@ -16,7 +16,7 @@ docker compose up -d hermes hermes-dashboard-proxy codex-login-proxy
 docker exec hermes sh -lc 'pkill -f "[c]odex login" || true'
 
 cleanup() {
-  docker compose stop codex-login-proxy >/dev/null 2>&1 || true
+	docker compose stop codex-login-proxy >/dev/null 2>&1 || true
 }
 trap cleanup EXIT INT TERM
 

@@ -35,9 +35,14 @@ docker compose config
 Validates Compose syntax and interpolated configuration.
 
 ```sh
-for f in scripts/*.sh; do sh -n "$f"; done
+mise run lint-shell
 ```
-Checks shell script syntax.
+Runs ShellCheck on operational scripts.
+
+```sh
+mise run format-shell
+```
+Formats shell scripts with shfmt.
 
 ## Coding Style & Naming Conventions
 
@@ -49,7 +54,7 @@ Before submitting changes, run:
 
 ```sh
 docker compose config
-for f in scripts/*.sh; do sh -n "$f"; done
+mise run lint-shell
 ```
 
 For behavior changes, test a fresh runtime by removing or moving `data/`, then running `scripts/hermes-up.sh --no-setup`. Verify both dashboards respond on `127.0.0.1:19119` and `127.0.0.1:18081`.

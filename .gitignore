@@ -40,3 +40,5 @@ temp/
 node_modules/
 .npm/
 .pnpm-store/
+
+!mise.lock
