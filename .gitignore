@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 docker-compose.images.lock.yml
+templates/hermes-config-mcp.yaml
 
 # Local runtime data, persistent state, and credentials
 data/*

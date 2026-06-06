@@ -11,12 +11,19 @@ Hermes Agent を Docker 上で動かし、egress（外部通信）を g0efilter 
 | `data/g0efilter-policy/policy.yaml` | g0efilter の egress allowlist |
 | `data/g0efilter-logs/` | g0efilter の audit log |
 | `templates/hermes-config.yaml` | Hermes の初期 config（model / tools などの初期設定） |
+| `templates/hermes-config-mcp.yaml.example` | MCP 設定用のサンプル。編集用の `templates/hermes-config-mcp.yaml` は git ignore |
 | `templates/g0efilter-policy.yaml` | g0efilter の初期 policy |
 
 初回（fresh）起動時に、`templates/` の内容が `data/` 配下にコピーされます。
 
 - `templates/hermes-config.yaml` → `data/hermes/config.yaml`
 - `templates/g0efilter-policy.yaml` → `data/g0efilter-policy/policy.yaml`
+
+MCP 設定を分けて管理したい場合は、ignored の編集用ファイルを使います。
+
+```sh
+cp templates/hermes-config-mcp.yaml.example templates/hermes-config-mcp.yaml
+```
 
 ## クイックスタート
 
