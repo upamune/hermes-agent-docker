@@ -16,8 +16,9 @@ elif [ "${1:-}" != "" ]; then
 	exit 2
 fi
 
-mkdir -p data/hermes/home data/g0efilter-logs data/g0efilter-policy
+mkdir -p data/hermes/home
 install -d -m 700 data/codex
+scripts/render-squid-config.sh
 
 if [ ! -f data/hermes/config.yaml ] && [ -f templates/hermes-config.yaml ]; then
 	if [ -f templates/hermes-config-mcp.yaml ]; then
@@ -33,33 +34,13 @@ if [ "$skip_setup" = false ] && [ "$force_setup" = false ] && [ ! -f data/hermes
 	run_setup=true
 fi
 
-if [ ! -f data/g0efilter-policy/policy.yaml ] && [ -f templates/g0efilter-policy.yaml ]; then
-	cp templates/g0efilter-policy.yaml data/g0efilter-policy/policy.yaml
-	echo "created data/g0efilter-policy/policy.yaml from templates/g0efilter-policy.yaml"
-elif [ ! -f data/g0efilter-policy/policy.yaml ]; then
-	cat >data/g0efilter-policy/policy.yaml <<'EOF'
-allowlist:
-  ips:
-    - "127.0.0.0/8"
-    - "10.0.0.0/8"
-    - "172.16.0.0/12"
-    - "192.168.0.0/16"
-  domains:
-    - "*.openai.com"
-    - "*.chatgpt.com"
-    - "openai.com"
-    - "chatgpt.com"
-EOF
-	echo "created data/g0efilter-policy/policy.yaml"
-fi
-
 if [ ! -f .env ]; then
 	cp .env.example .env
 	echo "created .env from .env.example"
 fi
 
 docker compose build hermes
-docker compose up -d
+docker compose up -d --remove-orphans
 docker compose stop codex-login-proxy >/dev/null 2>&1 || true
 if [ -f data/codex/auth.json ]; then
 	scripts/hermes-import-codex-auth.sh
@@ -68,21 +49,32 @@ docker compose ps
 
 echo
 echo "Hermes dashboard:    http://127.0.0.1:${HERMES_DASHBOARD_PORT:-19119}"
-echo "g0efilter dashboard: http://127.0.0.1:${G0EFILTER_DASHBOARD_PORT:-18081}"
+echo "Squid access log:    data/squid/logs/access.log"
 echo "Codex callback:      http://127.0.0.1:${CODEX_LOGIN_CALLBACK_PORT:-1455}"
 
 codex_status="$(scripts/codex-status.sh 2>/dev/null || true)"
+codex_login_needed=false
 if printf '%s\n' "$codex_status" | grep -q '^Logged in using ChatGPT'; then
 	echo "Codex auth:          logged in"
 else
+	codex_login_needed=true
 	echo "Codex auth:          not logged in"
-	echo
-	echo "Run this to log in with the browser callback flow:"
-	echo "  scripts/codex-login.sh"
 fi
 
 if [ "$run_setup" = true ]; then
 	echo
 	echo "Starting Hermes setup wizard..."
 	docker compose run --rm hermes setup
+fi
+
+if [ "$codex_login_needed" = true ]; then
+	if [ -t 0 ] && [ -t 1 ]; then
+		echo
+		echo "Starting Codex login because this is an interactive terminal."
+		scripts/codex-login.sh
+	else
+		echo
+		echo "Run this to log in with the browser callback flow:"
+		echo "  scripts/codex-login.sh"
+	fi
 fi

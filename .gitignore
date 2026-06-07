@@ -4,6 +4,7 @@
 !.env.example
 docker-compose.images.lock.yml
 templates/hermes-config-mcp.yaml
+templates/squid.user.conf
 
 # Local runtime data, persistent state, and credentials
 data/*

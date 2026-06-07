@@ -4,6 +4,7 @@ set -eu
 cd "$(dirname "$0")/.."
 
 install -d -m 700 data/codex
+scripts/render-squid-config.sh
 
 if [ ! -f data/codex/config.toml ]; then
 	cat >data/codex/config.toml <<'EOF'
@@ -12,7 +13,7 @@ forced_login_method = "chatgpt"
 EOF
 fi
 
-docker compose up -d hermes hermes-dashboard-proxy codex-login-proxy
+docker compose up -d hermes hermes-dashboard-proxy codex-login-proxy hermes-ingress
 docker exec hermes sh -lc 'pkill -f "[c]odex login" || true'
 
 cleanup() {
