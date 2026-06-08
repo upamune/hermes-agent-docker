@@ -1,0 +1,11 @@
+# User-defined Squid rules.
+# Copy this file to templates/squid.user.conf and edit it. The copied file is ignored by git.
+#
+# Squid ACL reference:
+# https://www.squid-cache.org/Doc/config/acl/
+#
+# Example: allow only one macOS host service, port 8080.
+#
+# acl yourapp_host dstdomain host.docker.internal
+# acl yourapp_port port 8080
+# http_access allow yourapp_host yourapp_port
